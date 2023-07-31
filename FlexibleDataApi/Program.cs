@@ -1,9 +1,11 @@
 ﻿using System.Net;
 using System.Text.Json;
 using FlexibleDataApi;
+using FlexibleDataApi.Handlers;
 using FlexibleDataApi.Models;
 using FlexibleDataApi.Models.DTO;
 using FluentValidation;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -25,6 +27,11 @@ builder.Services.AddDbContext<DataContext>(options =>
 // Configuring validator
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
+// Configure Media R
+builder.Services.AddMediatR(typeof(Program));
+builder.Services.AddScoped<INotificationHandler<ProcessAndStoreEvent>, PostProcessor>();
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -39,7 +46,7 @@ app.UseHttpsRedirection();
 
 var fdApp = app.MapGroup("/flexibledata");
 
-fdApp.MapPost("/create", async (DataContext context, IValidator<FlexibleDataCreateDto> _validation, [FromBody] FlexibleDataCreateDto flexibleDataCreateDto) =>
+fdApp.MapPost("/create", async (IMediator mediator, DataContext context, IValidator<FlexibleDataCreateDto> _validation, [FromBody] FlexibleDataCreateDto flexibleDataCreateDto) =>
 {
     var response = new ApiResponse();
 
@@ -68,6 +75,9 @@ fdApp.MapPost("/create", async (DataContext context, IValidator<FlexibleDataCrea
     response.Result = flexibleData;
     response.ISuccess = true;
     response.StatusCode = HttpStatusCode.Created;
+
+    await mediator.Publish(new ProcessAndStoreEvent { Data = flexibleDataCreateDto.Data });
+
 
     return Results.CreatedAtRoute("GetFlexibleData", new { id = createdId }, response);
 })

@@ -11,6 +11,10 @@ namespace FlexibleDataApi
 
 		// setup FlexibleData table
 		public DbSet<FlexibleData> FlexibleDatas => Set<FlexibleData>();
-	}
+
+        // setup Statistics table
+        public DbSet<Statistics> Statistics => Set<Statistics>();
+
+    }
 }
 
