@@ -83,7 +83,7 @@ fdApp.MapPost("/create", async (IMediator mediator, DataContext context, IValida
 })
 .WithName("CreateFlexibleData");
 
-fdApp.MapGet("/get", async (DataContext context,  [FromQuery] int? id) =>
+fdApp.MapGet("/get", async (DataContext context, [FromQuery] int? id) =>
 {
     var response = new ApiResponse();
     if (id.HasValue)
@@ -100,8 +100,10 @@ fdApp.MapGet("/get", async (DataContext context,  [FromQuery] int? id) =>
         }
 
         var data = JsonSerializer.Deserialize<Dictionary<string, string>>(flexibleData.Data);
-        List<Dictionary<string, string>> dataList = new List<Dictionary<string, string>>();
-        dataList.Add(data);
+        List<Dictionary<string, string>> dataList = new List<Dictionary<string, string>>
+        {
+            data
+        };
 
         response.Result = dataList;
     }
@@ -122,10 +124,20 @@ fdApp.MapGet("/get", async (DataContext context,  [FromQuery] int? id) =>
 })
 .WithName("GetFlexibleData");
 
-fdApp.MapGet("/get/{key:alpha}", (string key) =>
+fdApp.MapGet("/get/{key}", (DataContext context, string key) =>
 {
     var response = new ApiResponse();
-    response.Result = new { key };
+
+    var keyData = context.Statistics.FirstOrDefault(s => s.Key == key);
+    if (keyData == null)
+    {
+        response.ISuccess = false;
+        response.StatusCode = HttpStatusCode.NotFound;
+        response.ErrorMessages.Add($"No Statistics found with key: {key}");
+        return Results.NotFound(response);
+    }
+
+    response.Result = keyData;
     response.ISuccess = true;
     response.StatusCode = HttpStatusCode.OK;
     return Results.Ok(response);

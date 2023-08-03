@@ -52,7 +52,11 @@ namespace FlexibleDataApi.Handlers
                 }
             }
 
+            Console.WriteLine("Post processing complete");
+
             await _context.SaveChangesAsync();
+
+            Console.WriteLine("Processed data stored to database");
         }
     }
 
