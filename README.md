@@ -94,3 +94,9 @@ Feel free to use any resources you need to complete the challenge. If you have a
 Good luck!
 
 
+
+docker build -t dotnet-flexible-api .
+docker create --name core-api dotnet-flexible-api
+docker start core-api
+
+docker run -d -p 8080:80 dotnet-flexible-api
